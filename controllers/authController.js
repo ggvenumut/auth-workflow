@@ -79,6 +79,17 @@ const login = async (req, res) => {
   let refreshToken = "";
 
   // check for existing token
+  const existingToken = await Token.findOne({ user: user._id });
+  if (existingToken) {
+    const { isValid } = existingToken;
+    if (!isValid) {
+      throw new Error("Invalid credentials");
+    }
+    refreshToken = existingToken.refreshToken;
+    attachCookiesToResponse({ res, user: tokenUser, refreshToken });
+    res.status(200).json({ user: tokenUser });
+    return;
+  }
   refreshToken = cryptoJS.SHA256();
   const userAgent = req.headers["user-agent"];
   const ip = req.ip;
