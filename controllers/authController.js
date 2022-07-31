@@ -62,6 +62,7 @@ const login = async (req, res) => {
     throw new Error("please enter a valid email or password");
   }
   const user = await User.findOne({ email });
+  console.log(user);
   if (!user) {
     throw new Error("no user");
   }
