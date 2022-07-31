@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import { createTokenUser, attachCookiesToResponse } from "../utils/index.js";
 import cryptoJS from "crypto-js";
-
+import sendMail from "../utils/sendEmail.js";
 const register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -22,10 +22,10 @@ const register = async (req, res) => {
     role,
     verificationToken,
   });
-
-  res
-    .status(200)
-    .json({ msg: "Success! Please check your email to verify account" });
+  await sendMail();
+  res.status(200).json({
+    msg: "Success! Please check your email to verify account",
+  });
 };
 
 const verifyEmail = async (req, res) => {
