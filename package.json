@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "server": "nodemon server"
+        "start": "node start",
+        "dev": "nodemon server"
     },
     "main": "server.js",
     "repository": "https://github.com/ggvenumut/auth-workflow.git",

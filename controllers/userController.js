@@ -1,8 +1,6 @@
 import User from "../models/User.js";
 import {
   createTokenUser,
-  createJWT,
-  isTokenValid,
   attachCookiesToResponse,
   checkPermissions,
 } from "../utils/index.js";
