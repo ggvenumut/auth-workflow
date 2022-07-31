@@ -1,11 +1,12 @@
 import User from "../models/User.js";
+import Token from "../models/Token.js";
 import {
   createTokenUser,
   attachCookiesToResponse,
   sendVerificationEmail,
 } from "../utils/index.js";
 import cryptoJS from "crypto-js";
-import sendMail from "../utils/sendEmail.js";
+
 const register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -72,9 +73,20 @@ const login = async (req, res) => {
   if (!user.isVerified) {
     throw new Error("Please verify your email");
   }
+
   const tokenUser = createTokenUser(user);
-  attachCookiesToResponse({ res, user: tokenUser });
-  res.status(200).json({ user: tokenUser });
+  // create refresh token
+  let refreshToken = "";
+
+  // check for existing token
+  refreshToken = cryptoJS.SHA256();
+  const userAgent = req.headers["user-agent"];
+  const ip = req.ip;
+  const userToken = { refreshToken, ip, userAgent, user: user._id };
+
+  const token = await Token.create(userToken);
+  //attachCookiesToResponse({ res, user: tokenUser });
+  res.status(200).json({ user: tokenUser, token });
 };
 const logout = async (req, res) => {
   res.cookie("token", "logout", {
