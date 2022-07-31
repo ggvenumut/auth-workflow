@@ -11,12 +11,12 @@ const createReview = async (req, res) => {
   }
   const alreadySubmitted = await Review.findOne({
     product: productId,
-    user: req.user.userID,
+    user: req.user.userId,
   });
   if (alreadySubmitted) {
     throw new Error("Already submitted review for this product");
   }
-  req.body.user = req.user.userID;
+  req.body.user = req.user.userId;
   const review = await Review.create(req.body);
   res.status(200).json({ review });
 };

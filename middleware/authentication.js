@@ -1,6 +1,8 @@
 import { isTokenValid } from "../utils/index.js";
 import Token from "../models/Token.js";
 import { attachCookiesToResponse } from "../utils/index.js";
+// ---
+
 const authenticateUser = async (req, res, next) => {
   const { refreshToken, accessToken } = req.signedCookies;
   try {
@@ -17,7 +19,7 @@ const authenticateUser = async (req, res, next) => {
     });
 
     if (!existingToken || !existingToken?.isValid) {
-      throw new CustomError.UnauthenticatedError("Authentication Invalid");
+      throw new Error("Authentication Invalid");
     }
 
     attachCookiesToResponse({

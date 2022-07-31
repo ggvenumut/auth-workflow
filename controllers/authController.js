@@ -4,6 +4,7 @@ import {
   createTokenUser,
   attachCookiesToResponse,
   sendVerificationEmail,
+  sendResetPasswordEmail,
 } from "../utils/index.js";
 import cryptoJS from "crypto-js";
 
@@ -62,7 +63,6 @@ const login = async (req, res) => {
     throw new Error("please enter a valid email or password");
   }
   const user = await User.findOne({ email });
-  console.log(user);
   if (!user) {
     throw new Error("no user");
   }
@@ -101,11 +101,71 @@ const login = async (req, res) => {
   res.status(200).json({ user: tokenUser });
 };
 const logout = async (req, res) => {
-  res.cookie("token", "logout", {
+  await Token.findOneAndDelete({ user: req.user.userId });
+  res.cookie("accessToken", "logout", {
     httpOnly: true,
-    expires: new Date(Date.now() + 1000),
+    expires: new Date(Date.now()),
+  });
+  res.cookie("refreshToken", "logout", {
+    httpOnly: true,
+    expires: new Date(Date.now()),
   });
   res.status(200).json({ msg: "user logged out" });
 };
 
-export { register, login, logout, verifyEmail };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new Error("Please provide valid email");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (user) {
+    const passwordToken = cryptoJS.SHA256();
+    // send email
+    const origin = "http://localhost:3000";
+    await sendResetPasswordEmail({
+      name: user.name,
+      email: user.email,
+      token: passwordToken,
+      origin,
+    });
+
+    const tenMinutes = 1000 * 60 * 10;
+    const passwordTokenExpirationDate = new Date(Date.now() + tenMinutes);
+
+    user.passwordToken = passwordToken;
+    user.passwordTokenExpirationDate = passwordTokenExpirationDate;
+    await user.save();
+  }
+
+  res
+    .status(200)
+    .json({ msg: "Please check your email for reset password link" });
+};
+
+const resetPassword = async (req, res) => {
+  const { token, email, password } = req.body;
+  if (!token || !email || !password) {
+    throw new Error("Please provide all values");
+  }
+  const user = await User.findOne({ email });
+
+  if (user) {
+    const currentDate = new Date();
+
+    if (
+      user.passwordToken === token &&
+      user.passwordTokenExpirationDate > currentDate
+    ) {
+      user.password = password;
+      user.passwordToken = null;
+      user.passwordTokenExpirationDate = null;
+      await user.save();
+    }
+  }
+
+  res.send("reset password");
+};
+export { register, login, logout, verifyEmail, forgotPassword, resetPassword };

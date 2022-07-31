@@ -5,7 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const createProduct = async (req, res) => {
-  req.body.user = req.user.userID;
+  req.body.user = req.user.userId;
   const product = await Product.create(req.body);
   res.status(200).json({ product });
 };
