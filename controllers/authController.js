@@ -27,6 +27,24 @@ const register = async (req, res) => {
     .status(200)
     .json({ msg: "Success! Please check your email to verify account" });
 };
+
+const verifyEmail = async (req, res) => {
+  const { verificationToken, email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new Error("Verification failed");
+  }
+  if (user.verificationToken !== verificationToken) {
+    throw new Error("Verification failed");
+  }
+
+  user.isVerified = true;
+  user.verified = Date.now();
+  user.verificationToken = "";
+  await user.save();
+  res.status(200).json({ msg: "Email verified" });
+};
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -56,4 +74,4 @@ const logout = async (req, res) => {
   res.status(200).json({ msg: "user logged out" });
 };
 
-export { register, login, logout };
+export { register, login, logout, verifyEmail };
