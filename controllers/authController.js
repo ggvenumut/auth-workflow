@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import { createTokenUser, attachCookiesToResponse } from "../utils/index.js";
+import cryptoJS from "crypto-js";
 
 const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -12,15 +13,19 @@ const register = async (req, res) => {
   const isFirstAccount = (await User.countDocuments({})) === 0;
   const role = isFirstAccount ? "admin" : "user";
 
+  const verificationToken = cryptoJS.SHA256();
+
   const user = await User.create({
     name,
     email,
     password,
     role,
+    verificationToken,
   });
-  const tokenUser = createTokenUser(user);
-  attachCookiesToResponse({ res, user: tokenUser });
-  res.status(200).json({ user: tokenUser });
+
+  res
+    .status(200)
+    .json({ msg: "Success! Please check your email to verify account" });
 };
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -35,6 +40,9 @@ const login = async (req, res) => {
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
     throw new Error("Invalid password");
+  }
+  if (!user.isVerified) {
+    throw new Error("Please verify your email");
   }
   const tokenUser = createTokenUser(user);
   attachCookiesToResponse({ res, user: tokenUser });
